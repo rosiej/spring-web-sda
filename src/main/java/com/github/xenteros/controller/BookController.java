@@ -6,9 +6,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/books")
+@RequestMapping("/api/v1/books")
 class BookController {
 
     private List<Book> books = new ArrayList<>();
@@ -36,6 +37,21 @@ class BookController {
     public Book createBook(@RequestParam String title, @RequestParam String author) {
         Book book = new Book(nextId++, author, title);
         books.add(book);
+        return book;
+    }
+
+    @PutMapping("/{id}")
+    public Book updateBook(@PathVariable Long id,
+                           @RequestParam String newAuthor,
+                           @RequestParam String newTitle) {
+        return books.stream().filter(book -> book.getId().equals(id))
+                .findFirst()
+                .map(book -> updateBook(book, newTitle, newAuthor)
+                ).orElseThrow(RuntimeException::new);
+    }
+
+    private Book updateBook(Book book, String newTitle, String newAuthor) {
+        book.setAuthor(newAuthor).setTitle(newTitle);
         return book;
     }
 }
