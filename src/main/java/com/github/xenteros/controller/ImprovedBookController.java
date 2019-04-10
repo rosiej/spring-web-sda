@@ -1,6 +1,8 @@
 package com.github.xenteros.controller;
 
 import com.github.xenteros.dto.BookDto;
+import com.github.xenteros.exception.ResourceNotFoundException;
+import com.github.xenteros.exception.ValidationException;
 import com.github.xenteros.mapper.BookMapper;
 import com.github.xenteros.model.Book;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +35,7 @@ public class ImprovedBookController {
                 .filter(book -> book.getId().equals(id))
                 .findFirst()
                 .map(bookMapper::toBookDto)
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(ResourceNotFoundException::new);
     }
 
     @DeleteMapping("/{id}")
@@ -43,6 +45,7 @@ public class ImprovedBookController {
 
     @PostMapping
     public BookDto createBook(@RequestBody BookDto bookDto) {
+        validate(bookDto);
         Book book = new Book(nextId++, bookDto.getAuthor(), bookDto.getTitle());
         books.add(book);
         return bookMapper.toBookDto(book);
@@ -55,11 +58,32 @@ public class ImprovedBookController {
                 .findFirst()
                 .map(book -> updateBook(book, bookDto.getTitle(), bookDto.getAuthor()))
                 .map(bookMapper::toBookDto)
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(ResourceNotFoundException::new);
     }
 
     private Book updateBook(Book book, String newTitle, String newAuthor) {
         book.setAuthor(newAuthor).setTitle(newTitle);
         return book;
+    }
+
+    private void validate(BookDto bookDto) {
+
+        List<String> errors = new ArrayList<>();
+
+        if (bookDto == null) {
+            errors.add("Book must not be null");
+        } else {
+            if (bookDto.getAuthor() == null) {
+                errors.add("Author must not be null");
+            }
+            if (bookDto.getTitle() == null) {
+                errors.add("Title must not be null");
+            }
+        }
+
+        if (!errors.isEmpty()) {
+            throw new ValidationException(errors);
+        }
+
     }
 }

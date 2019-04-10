@@ -1,8 +1,14 @@
 package com.github.xenteros.dto;
 
+import org.hibernate.validator.constraints.NotBlank;
+
+import javax.validation.constraints.NotNull;
+
 public class BookDto {
 
+    @NotBlank(message = "Title must not be blank")
     private String title;
+    @NotNull
     private String author;
 
     public BookDto() {
